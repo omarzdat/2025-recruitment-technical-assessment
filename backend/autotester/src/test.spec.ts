@@ -108,23 +108,37 @@ describe("Task 3", () => {
       );
     };
 
+    // Reset the cookbook state before running Task 3 tests
+    // this is what comes to mind to fix the strange thing the tests are doing here
+    beforeAll(async () => {
+      await request("http://localhost:8080").post("/reset").send({});
+    });
+
+
+    // i believe this is trying to test for "A recipe with the corresponding name cannot be found."
     it("What is bro doing - Get empty cookbook", async () => {
       const resp = await getTask3("nothing");
       expect(resp.status).toBe(400);
     });
 
+    // The searched name is NOT a recipe name (ie. an ingredient).
+    // Issue here though is that due to the server not resetting between task tests,
+    // this post entry fails due to beef already being in the cookbook
+    // im kind of confused as to why the cookbook isnt being cleaned up between task tests
+    // ill assyme then that the use of the beef ingredient is just a mistake of scope
     it("What is bro doing - Get ingredient", async () => {
       const resp = await postEntry({
         type: "ingredient",
         name: "beef",
         cookTime: 2,
       });
-      expect(resp.status).toBe(200);
+      expect(resp.status).toBe(200); // here is the failure point, meaning that beef is not an acceptable addition
 
       const resp2 = await getTask3("beef");
       expect(resp2.status).toBe(400);
     });
 
+    // The recipe contains recipes or ingredients that aren't in the cookbook.
     it("Unknown missing item", async () => {
       const cheese = {
         type: "recipe",
